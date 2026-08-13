@@ -9,6 +9,13 @@ import { CropEditor } from "@/components/crop-editor";
 import { FramesPanel } from "@/components/frames-panel";
 import { Button } from "@/components/ui/button";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -359,15 +366,15 @@ export default function ToolPage() {
           <section className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="flex min-h-[min(50dvh,32rem)] flex-1 gap-1">
-                <button
+                <Button
                   type="button"
                   onClick={() => navPhotos(-1)}
                   disabled={!photos.length || selectedIndex === 0}
                   aria-label="Previous photo"
-                  className="group flex w-8 shrink-0 items-center justify-center self-stretch rounded-r-sm rounded-l-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+                  className="group flex w-7 h-full! shrink-0 items-center justify-center self-stretch rounded-r-sm rounded-l-xl bg-accent text-foreground"
                 >
                   <HugeiconsIcon icon={ChevronLeftIcon} className="size-5" />
-                </button>
+                </Button>
                 <div className="flex min-w-0 flex-1 items-center justify-center overflow-y-auto rounded-sm border border-border bg-muted/30">
                   {!overlay ? (
                     <EmptyState
@@ -427,17 +434,17 @@ export default function ToolPage() {
                     </div>
                   )}
                 </div>
-                <button
+                <Button
                   type="button"
                   onClick={() => navPhotos(1)}
                   disabled={
                     !photos.length || selectedIndex === photos.length - 1
                   }
                   aria-label="Next photo"
-                  className="group flex w-8 shrink-0 items-center justify-center self-stretch rounded-l-sm rounded-r-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+                  className="group flex w-7 h-full! shrink-0 items-center justify-center self-stretch rounded-l-sm rounded-r-xl bg-accent text-foreground"
                 >
                   <HugeiconsIcon icon={ChevronRightIcon} className="size-5" />
-                </button>
+                </Button>
               </div>
 
               {photo && photo.status === "ready" && (
@@ -584,6 +591,7 @@ export default function ToolPage() {
           onChange={(e) => {
             if (e.target.files) addFiles(Array.from(e.target.files));
             e.currentTarget.value = "";
+            setMobileTab((tab) => (tab === "photos" ? null : tab));
           }}
         />
 
@@ -624,13 +632,19 @@ export default function ToolPage() {
           />
         </nav>
 
-        {mobileTab && (
-          <div
-            className="absolute bottom-14 left-0 right-0 z-40 max-h-[70dvh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-4 shadow-2xl lg:hidden"
-            role="dialog"
-            aria-label={mobileTab === "frame" ? "Frame settings" : "Photos"}
-          >
-            {mobileTab === "frame" ? (
+        <Drawer
+          open={mobileTab === "frame"}
+          onOpenChange={(open) => setMobileTab(open ? "frame" : null)}
+          showSwipeHandle
+        >
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Frame</DrawerTitle>
+              <DrawerDescription>
+                Pick a frame, ratio, and resolution.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="scrollbar-none flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
               <FramesPanel
                 overlay={overlay}
                 overlayName={overlayName}
@@ -642,23 +656,35 @@ export default function ToolPage() {
                 onResolutionChange={setResolution}
                 customInputRef={frameInputRef}
               />
-            ) : (
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => photoInputRef.current?.click()}
-                  className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground hover:border-primary/60"
-                >
-                  <HugeiconsIcon icon={ImageAdd01Icon} className="size-6" />
-                  <span className="font-medium text-foreground">
-                    Click to select or drop photos
-                  </span>
-                  <span>JPG, PNG, WebP — all processed locally</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        <Drawer
+          open={mobileTab === "photos"}
+          onOpenChange={(open) => setMobileTab(open ? "photos" : null)}
+          showSwipeHandle
+        >
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Photos</DrawerTitle>
+              <DrawerDescription>Add photos to frame.</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-5 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="flex min-h-28 flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground hover:border-primary/60"
+              >
+                <HugeiconsIcon icon={ImageAdd01Icon} className="size-6" />
+                <span className="font-medium text-foreground">
+                  Click to select or drop photos
+                </span>
+                <span>JPG, PNG, WebP — all processed locally</span>
+              </button>
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
     </TooltipProvider>
   );
