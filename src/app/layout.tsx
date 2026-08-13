@@ -1,10 +1,10 @@
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistMonoHeading = Geist_Mono({
+const geistMonoHeading = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-heading",
 });

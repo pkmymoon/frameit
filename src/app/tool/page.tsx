@@ -26,7 +26,6 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
-  ArrowLeft01Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
   Delete02Icon,
@@ -61,6 +60,7 @@ export default function ToolPage() {
 
   const overlayUrlRef = React.useRef<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const frameInputRef = React.useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = React.useState(false);
 
   const { outW, outH } = outputDims(ratio, resolution);
@@ -325,22 +325,23 @@ export default function ToolPage() {
               onRatioChange={setRatio}
               resolution={resolution}
               onResolutionChange={setResolution}
+              customInputRef={frameInputRef}
             />
           </aside>
 
           <section className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
             <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="flex min-h-[min(50dvh,32rem)] flex-1 gap-2">
+              <div className="flex min-h-[min(50dvh,32rem)] flex-1 gap-1">
                 <button
                   type="button"
                   onClick={() => navPhotos(-1)}
                   disabled={!photos.length || selectedIndex === 0}
                   aria-label="Previous photo"
-                  className="group flex w-10 shrink-0 items-center justify-center self-stretch rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+                  className="group flex w-8 shrink-0 items-center justify-center self-stretch rounded-r-sm rounded-l-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
                 >
                   <HugeiconsIcon icon={ChevronLeftIcon} className="size-5" />
                 </button>
-                <div className="flex min-w-0 flex-1 items-center justify-center overflow-y-auto rounded-xl border border-border bg-muted/30">
+                <div className="flex min-w-0 flex-1 items-center justify-center overflow-y-auto rounded-sm border border-border bg-muted/30">
                   {!overlay ? (
                     <EmptyState
                       icon={
@@ -349,7 +350,13 @@ export default function ToolPage() {
                       title="Choose a frame to begin"
                       body="Upload your own transparent PNG to frame your photos."
                       action="Choose a frame"
-                      onClick={() => setMobileTab("frame")}
+                      onClick={() => {
+                        if (frameInputRef.current) {
+                          frameInputRef.current.click();
+                        } else {
+                          setMobileTab("frame");
+                        }
+                      }}
                     />
                   ) : !photo || photo.status === "loading" ? (
                     <EmptyState
@@ -400,21 +407,21 @@ export default function ToolPage() {
                     !photos.length || selectedIndex === photos.length - 1
                   }
                   aria-label="Next photo"
-                  className="group flex w-10 shrink-0 items-center justify-center self-stretch rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+                  className="group flex w-8 shrink-0 items-center justify-center self-stretch rounded-l-sm rounded-r-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
                 >
                   <HugeiconsIcon icon={ChevronRightIcon} className="size-5" />
                 </button>
               </div>
 
               {photo && photo.status === "ready" && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-2">
+                <div className="flex flex-wrap items-center justify-center gap-4 rounded-xl border border-border p-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Tooltip>
                       <TooltipTrigger
                         render={
                           <Button
                             variant="outline"
-                            size="icon-sm"
+                            size="icon-xs"
                             onClick={() => resetPhoto(selectedIndex)}
                             aria-label="Reset crop"
                           />
@@ -429,7 +436,7 @@ export default function ToolPage() {
                         render={
                           <Button
                             variant="outline"
-                            size="icon-sm"
+                            size="icon-xs"
                             onClick={() =>
                               zoomCenter(selectedIndex, 1 / ZOOM_BUTTONS)
                             }
@@ -446,7 +453,7 @@ export default function ToolPage() {
                         render={
                           <Button
                             variant="outline"
-                            size="icon-sm"
+                            size="icon-xs"
                             onClick={() =>
                               zoomCenter(selectedIndex, ZOOM_BUTTONS)
                             }
@@ -590,6 +597,7 @@ export default function ToolPage() {
                 onRatioChange={setRatio}
                 resolution={resolution}
                 onResolutionChange={setResolution}
+                customInputRef={frameInputRef}
               />
             ) : (
               <div className="flex flex-col gap-3">
@@ -659,9 +667,10 @@ function EmptyState({
         {icon}
       </span>
       <h2 className="text-base font-semibold">{title}</h2>
-      <p className="max-w-xs text-sm text-muted-foreground">{body}</p>
+      <p className="max-w-xs text-sm text-balance text-muted-foreground">
+        {body}
+      </p>
       <Button onClick={onClick} className="mt-1 gap-2">
-        <HugeiconsIcon icon={ArrowLeft01Icon} data-icon="inline-start" />
         {action}
       </Button>
     </div>

@@ -64,7 +64,15 @@ export function CropEditor({
     if (!cv || !ctx || !box) return;
     cv.width = box.w;
     cv.height = box.h;
-    renderScene(ctx, box.w, box.h, photo.bitmap, transform, box.w / outW, overlay);
+    renderScene(
+      ctx,
+      box.w,
+      box.h,
+      photo.bitmap,
+      transform,
+      box.w / outW,
+      overlay,
+    );
   }, [photo, box, transform, overlay, outW, outH]);
 
   const clamp = (t: Transform) =>
@@ -78,9 +86,7 @@ export function CropEditor({
     oy: number;
   } | null>(null);
 
-  const pointers = React.useRef(
-    new Map<number, { x: number; y: number }>()
-  );
+  const pointers = React.useRef(new Map<number, { x: number; y: number }>());
   const pinch = React.useRef<{
     dist: number;
     cx: number;
@@ -137,7 +143,7 @@ export function CropEditor({
       const k = (dist || 1) / p.dist;
       const nextScale = Math.min(
         p.scale * k,
-        coverTransform(photo.imgW, photo.imgH, outW, outH).scale * MAX_ZOOM
+        coverTransform(photo.imgW, photo.imgH, outW, outH).scale * MAX_ZOOM,
       );
       const scaleK = nextScale / p.scale;
       const rect = e.currentTarget.getBoundingClientRect();
@@ -153,8 +159,8 @@ export function CropEditor({
           photo.imgW,
           photo.imgH,
           outW,
-          outH
-        )
+          outH,
+        ),
       );
       return;
     }
@@ -166,7 +172,7 @@ export function CropEditor({
         ...transformRef.current,
         ox: d.ox + (e.clientX - d.sx) / P,
         oy: d.oy + (e.clientY - d.sy) / P,
-      })
+      }),
     );
   };
 
@@ -190,13 +196,19 @@ export function CropEditor({
       const factor = Math.pow(1.0015, -e.deltaY);
       const nextScale = Math.min(
         cur.scale * factor,
-        coverTransform(photo.imgW, photo.imgH, outW, outH).scale * MAX_ZOOM
+        coverTransform(photo.imgW, photo.imgH, outW, outH).scale * MAX_ZOOM,
       );
       const k = nextScale / cur.scale;
       const ox = cX - (cX - cur.ox) * k;
       const oy = cY - (cY - cur.oy) * k;
       onChangeRef.current(
-        clampTransform({ scale: nextScale, ox, oy }, photo.imgW, photo.imgH, outW, outH)
+        clampTransform(
+          { scale: nextScale, ox, oy },
+          photo.imgW,
+          photo.imgH,
+          outW,
+          outH,
+        ),
       );
     };
     cv.addEventListener("wheel", onWheel, { passive: false });
@@ -206,7 +218,7 @@ export function CropEditor({
   return (
     <div
       ref={containerRef}
-      className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30"
+      className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden "
     >
       <canvas
         ref={canvasRef}

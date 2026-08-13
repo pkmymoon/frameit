@@ -49,15 +49,18 @@ export function Hero() {
       </h1>
 
       <p className="max-w-2xl text-base text-muted-foreground text-pretty sm:text-lg">
-        Upload your own transparent frame PNG, drop in your photos, and
-        FrameIt frames them instantly. No sign-up, no uploads — just your
-        device.
+        Upload your own transparent frame PNG, drop in your photos, and FrameIt
+        frames them instantly. No sign-up, no uploads — just your device.
       </p>
 
       <div className="flex flex-col items-center gap-3 sm:flex-row">
-        <Button size="lg" className="gap-2 text-base" render={<Link href="/tool" />}>
+        <Button
+          size="lg"
+          className="gap-2 text-base"
+          render={<Link href="/tool" />}
+        >
           <HugeiconsIcon icon={SparklesFreeIcons} className="size-5" />
-          Frame your first photo
+          Frame your photos
         </Button>
       </div>
 
