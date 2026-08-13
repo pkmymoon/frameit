@@ -21,7 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "FrameIt",
-  description: "Frame event photos with an overlay, right in your browser.",
+  description:
+    "Seamlessly frame your photos with your own custom frame — fully private, with smart cropping that runs entirely in your browser.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

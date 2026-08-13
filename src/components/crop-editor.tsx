@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { MAX_ZOOM, clampTransform, coverTransform } from "@/lib/crop";
-import { drawFaceGuides, renderScene } from "@/lib/render";
+import { renderScene } from "@/lib/render";
 import type { PhotoState, Transform } from "@/lib/types";
 
 interface Props {
@@ -65,7 +65,6 @@ export function CropEditor({
     cv.width = box.w;
     cv.height = box.h;
     renderScene(ctx, box.w, box.h, photo.bitmap, transform, box.w / outW, overlay);
-    drawFaceGuides(ctx, photo.faces, transform, box.w / outW);
   }, [photo, box, transform, overlay, outW, outH]);
 
   const clamp = (t: Transform) =>
@@ -79,9 +78,41 @@ export function CropEditor({
     oy: number;
   } | null>(null);
 
+  const pointers = React.useRef(
+    new Map<number, { x: number; y: number }>()
+  );
+  const pinch = React.useRef<{
+    dist: number;
+    cx: number;
+    cy: number;
+    scale: number;
+    ox: number;
+    oy: number;
+  } | null>(null);
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const el = e.currentTarget;
     el.setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.current.size === 2) {
+      const pts = Array.from(pointers.current.values());
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const dist = Math.hypot(dx, dy);
+      const cur = transformRef.current;
+      pinch.current = {
+        dist: dist || 1,
+        cx: (pts[0].x + pts[1].x) / 2,
+        cy: (pts[0].y + pts[1].y) / 2,
+        scale: cur.scale,
+        ox: cur.ox,
+        oy: cur.oy,
+      };
+      drag.current = null;
+      return;
+    }
+
     drag.current = {
       id: e.pointerId,
       sx: e.clientX,
@@ -92,8 +123,44 @@ export function CropEditor({
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!P) return;
+    const prev = pointers.current.get(e.pointerId);
+    if (prev) pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pinch.current) {
+      const p = pinch.current;
+      const pts = Array.from(pointers.current.values());
+      if (pts.length < 2) return;
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const dist = Math.hypot(dx, dy);
+      const k = (dist || 1) / p.dist;
+      const nextScale = Math.min(
+        p.scale * k,
+        coverTransform(photo.imgW, photo.imgH, outW, outH).scale * MAX_ZOOM
+      );
+      const scaleK = nextScale / p.scale;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const cX = (p.cx - rect.left) / P;
+      const cY = (p.cy - rect.top) / P;
+      onChangeRef.current(
+        clampTransform(
+          {
+            scale: nextScale,
+            ox: cX - (cX - p.ox) * scaleK,
+            oy: cY - (cY - p.oy) * scaleK,
+          },
+          photo.imgW,
+          photo.imgH,
+          outW,
+          outH
+        )
+      );
+      return;
+    }
+
     const d = drag.current;
-    if (!d || d.id !== e.pointerId || !P) return;
+    if (!d || d.id !== e.pointerId) return;
     onChangeRef.current(
       clamp({
         ...transformRef.current,
@@ -104,7 +171,9 @@ export function CropEditor({
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointers.current.delete(e.pointerId);
     if (drag.current?.id === e.pointerId) drag.current = null;
+    if (pointers.current.size < 2) pinch.current = null;
   };
 
   // Native (non-passive) wheel listener so we can preventDefault / zoom.

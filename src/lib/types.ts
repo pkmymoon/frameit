@@ -13,20 +13,17 @@ export const RATIOS: Ratio[] = [
   { id: "9:16", label: "9:16", w: 9, h: 16 },
 ];
 
-export const LONG_SIDE = 1080;
+export const SHORT_SIDE = 1080;
 
-export function outputDims(ratio: Ratio): { outW: number; outH: number } {
-  const long = Math.max(ratio.w, ratio.h);
-  const outW = Math.round(LONG_SIDE * (ratio.w / long));
-  const outH = Math.round(LONG_SIDE * (ratio.h / long));
+export const RESOLUTIONS: number[] = [720, 1080, 1440, 2160];
+
+/** Output pixel dimensions where the shorter side equals `shortSide`. */
+export function outputDims(ratio: Ratio, shortSide: number = SHORT_SIDE): { outW: number; outH: number } {
+  const short = Math.min(ratio.w, ratio.h);
+  const scale = shortSide / short;
+  const outW = Math.round(scale * ratio.w);
+  const outH = Math.round(scale * ratio.h);
   return { outW, outH };
-}
-
-export interface FaceBox {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 export interface Transform {
@@ -46,9 +43,8 @@ export interface PhotoState {
   imgW: number;
   imgH: number;
   status: PhotoStatus;
-  faces: FaceBox[];
   transform: Transform;
   confirmed: boolean;
 }
 
-export type Step = "upload" | "review";
+export type AppStep = "frame" | "photos" | "review";

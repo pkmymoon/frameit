@@ -1,13 +1,13 @@
 # FrameIt
 
-Automate the framing of event photos with an event-details overlay. Everything runs **100% in the browser** — photos never leave your device, and there is no backend or server.
+Frame your photos seamlessly with your own custom frame. Everything runs **100% in the browser** — fully secure, your photos never leave your device, and there is no backend or server.
 
 ## What it does
 
-- Upload a **transparent PNG overlay** (your event banner) once.
+- Upload a **transparent PNG overlay** (your own custom frame) once.
 - Pick an **output frame ratio** (4:5, 1:1, 3:2, 16:9, 9:16).
 - Upload **many photos** at once.
-- **Face detection** (MediaPipe, in-browser) suggests a crop for each photo that keeps every face in frame — so heads are never chopped off.
+- **Face detection** (MediaPipe, in-browser) automatically suggests a crop for each photo that keeps every face in frame — so heads are never chopped off.
 - **Review** each photo: drag to pan, scroll to zoom, then confirm. Amber boxes mark detected faces.
 - **Export** all framed photos as a single `.zip` (photo + overlay composited at 1080px, JPEG).
 
