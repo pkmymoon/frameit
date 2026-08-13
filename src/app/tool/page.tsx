@@ -29,6 +29,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Delete02Icon,
+  Download01Icon,
   FrameIcon,
   ImageAdd01Icon,
   ImageAdd02Icon,
@@ -215,6 +216,44 @@ export default function ToolPage() {
     );
   };
 
+  const renderPhotoBlob = async (p: PhotoState) => {
+    const { outW: w, outH: h } = outputDims(ratio, resolution);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    renderScene(ctx, w, h, p.bitmap, p.transform, 1, overlay);
+    return new Promise<Blob>((res, rej) =>
+      canvas.toBlob(
+        (b) => (b ? res(b) : rej(new Error("encode failed"))),
+        "image/jpeg",
+        0.92,
+      ),
+    );
+  };
+
+  const downloadPhoto = async (idx: number) => {
+    const p = photos[idx];
+    if (!p || p.status !== "ready") return;
+    setExporting(true);
+    try {
+      const blob = await renderPhotoBlob(p);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const base = (p.name || "photo").replace(/\.[^.]+$/, "");
+      a.href = url;
+      a.download = `${base}-framed.jpg`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      toast.success(`Downloaded “${base}-framed.jpg”`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Download failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const exportZip = async () => {
     const readyPhotos = photos.filter((p) => p.status === "ready");
     if (!readyPhotos.length) {
@@ -225,22 +264,10 @@ export default function ToolPage() {
     try {
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
-      const { outW: w, outH: h } = outputDims(ratio, resolution);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
 
       for (let i = 0; i < readyPhotos.length; i++) {
         const p = readyPhotos[i];
-        renderScene(ctx, w, h, p.bitmap, p.transform, 1, overlay);
-        const blob = await new Promise<Blob>((res, rej) =>
-          canvas.toBlob(
-            (b) => (b ? res(b) : rej(new Error("encode failed"))),
-            "image/jpeg",
-            0.92,
-          ),
-        );
+        const blob = await renderPhotoBlob(p);
         zip.file(`photo-${String(i + 1).padStart(3, "0")}.jpg`, blob);
         await new Promise((r) => setTimeout(r, 0));
       }
@@ -308,7 +335,7 @@ export default function ToolPage() {
           >
             <HugeiconsIcon icon={Zip01Icon} data-icon="inline-start" />
             <span className="hidden sm:inline">
-              {exporting ? "Exporting…" : "Export ZIP"}
+              {exporting ? "Download…" : "Download as ZIP"}
             </span>
             <span className="sm:hidden">{exporting ? "…" : readyCount}</span>
           </Button>
@@ -348,7 +375,7 @@ export default function ToolPage() {
                         <HugeiconsIcon icon={FrameIcon} className="size-8" />
                       }
                       title="Choose a frame to begin"
-                      body="Upload your own transparent PNG to frame your photos."
+                      body="Choose a transparent PNG to frame your photos."
                       action="Choose a frame"
                       onClick={() => {
                         if (frameInputRef.current) {
@@ -366,7 +393,7 @@ export default function ToolPage() {
                           className="size-8"
                         />
                       }
-                      title="Add some photos to frame"
+                      title="Add photos to frame"
                       body="Drop photos anywhere in this view or click to select them."
                       action="Add photos"
                       onClick={() => photoInputRef.current?.click()}
@@ -465,6 +492,23 @@ export default function ToolPage() {
                       </TooltipTrigger>
                       <TooltipContent>Zoom in</TooltipContent>
                     </Tooltip>
+                    <span className="mx-1 h-5 w-px bg-border" aria-hidden />
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="outline"
+                            size="icon-xs"
+                            onClick={() => downloadPhoto(selectedIndex)}
+                            disabled={exporting}
+                            aria-label="Download this photo"
+                          />
+                        }
+                      >
+                        <HugeiconsIcon icon={Download01Icon} />
+                      </TooltipTrigger>
+                      <TooltipContent>Download this photo</TooltipContent>
+                    </Tooltip>
                   </div>
                   <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
                     <HugeiconsIcon icon={Move01Icon} className="size-3.5" />{" "}
@@ -492,9 +536,8 @@ export default function ToolPage() {
             {photos.length > 0 && (
               <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
                 {photos.map((p, i) => (
-                  <button
+                  <div
                     key={p.id}
-                    type="button"
                     onClick={() => selectIndex(i)}
                     className={cn(
                       "group relative aspect-square h-16 shrink-0 overflow-hidden rounded-lg border-2",
@@ -525,7 +568,7 @@ export default function ToolPage() {
                     >
                       <HugeiconsIcon icon={Delete02Icon} className="size-3" />
                     </button>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}

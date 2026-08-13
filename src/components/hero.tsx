@@ -57,6 +57,7 @@ export function Hero() {
         <Button
           size="lg"
           className="gap-2 text-base"
+          nativeButton={false}
           render={<Link href="/tool" />}
         >
           <HugeiconsIcon icon={SparklesFreeIcons} className="size-5" />

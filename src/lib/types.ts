@@ -13,12 +13,15 @@ export const RATIOS: Ratio[] = [
   { id: "9:16", label: "9:16", w: 9, h: 16 },
 ];
 
-export const SHORT_SIDE = 1080;
+export const SHORT_SIDE = 2160;
 
 export const RESOLUTIONS: number[] = [720, 1080, 1440, 2160];
 
 /** Output pixel dimensions where the shorter side equals `shortSide`. */
-export function outputDims(ratio: Ratio, shortSide: number = SHORT_SIDE): { outW: number; outH: number } {
+export function outputDims(
+  ratio: Ratio,
+  shortSide: number = SHORT_SIDE,
+): { outW: number; outH: number } {
   const short = Math.min(ratio.w, ratio.h);
   const scale = shortSide / short;
   const outW = Math.round(scale * ratio.w);

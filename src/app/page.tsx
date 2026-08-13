@@ -19,7 +19,7 @@ export default function Page() {
             </span>
             FrameIt
           </Link>
-          <Button size="sm" render={<Link href="/tool" />}>
+          <Button size="sm" nativeButton={false} render={<Link href="/tool" />}>
             Start framing
           </Button>
         </nav>
