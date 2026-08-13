@@ -5,20 +5,26 @@ import * as React from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CropEditor } from "@/components/crop-editor";
 import { FramesPanel } from "@/components/frames-panel";
-import { coverTransform, MAX_ZOOM, clampTransform } from "@/lib/crop";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { clampTransform, coverTransform, MAX_ZOOM } from "@/lib/crop";
 import { renderScene } from "@/lib/render";
 import {
-  SHORT_SIDE,
   outputDims,
   RATIOS,
+  SHORT_SIDE,
   type PhotoState,
   type Ratio,
   type Transform,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft01Icon,
   ChevronLeftIcon,
@@ -29,12 +35,11 @@ import {
   ImageAdd02Icon,
   Move01Icon,
   Refresh01Icon,
+  Zip01Icon,
   ZoomInAreaIcon,
   ZoomOutAreaIcon,
-  Zip01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { cn } from "@/lib/utils";
 
 const ZOOM_BUTTONS = 1.25;
 
@@ -68,7 +73,9 @@ export default function ToolPage() {
   }, []);
 
   const updatePhoto = (id: string, patch: Partial<PhotoState>) => {
-    setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    );
   };
 
   const setOverlayImage = async (src: string, name: string) => {
@@ -82,7 +89,9 @@ export default function ToolPage() {
       setOverlayName(name);
       const aspect = (img.naturalWidth || 1) / (img.naturalHeight || 1);
       const closest = RATIOS.reduce((best, r) =>
-        Math.abs(r.w / r.h - aspect) < Math.abs(best.w / best.h - aspect) ? r : best
+        Math.abs(r.w / r.h - aspect) < Math.abs(best.w / best.h - aspect)
+          ? r
+          : best,
       );
       setRatio(closest);
     } catch {
@@ -131,7 +140,9 @@ export default function ToolPage() {
         try {
           let bitmap: ImageBitmap;
           try {
-            bitmap = await createImageBitmap(p.file, { imageOrientation: "from-image" });
+            bitmap = await createImageBitmap(p.file, {
+              imageOrientation: "from-image",
+            });
           } catch {
             bitmap = await createImageBitmap(p.file);
           }
@@ -164,7 +175,9 @@ export default function ToolPage() {
   };
 
   const changeTransform = (i: number, t: Transform) => {
-    setPhotos((prev) => prev.map((p, idx) => (idx === i ? { ...p, transform: t } : p)));
+    setPhotos((prev) =>
+      prev.map((p, idx) => (idx === i ? { ...p, transform: t } : p)),
+    );
   };
 
   const resetPhoto = (i: number) => {
@@ -172,8 +185,8 @@ export default function ToolPage() {
       prev.map((p, idx) =>
         idx === i && p.status === "ready"
           ? { ...p, transform: coverTransform(p.imgW, p.imgH, outW, outH) }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -183,13 +196,22 @@ export default function ToolPage() {
     const out = outputDims(ratio, resolution);
     const minScale = coverTransform(p.imgW, p.imgH, out.outW, out.outH).scale;
     const t = p.transform;
-    const nextScale = Math.min(Math.max(t.scale * factor, minScale), minScale * MAX_ZOOM);
+    const nextScale = Math.min(
+      Math.max(t.scale * factor, minScale),
+      minScale * MAX_ZOOM,
+    );
     const k = nextScale / t.scale;
     const ox = out.outW / 2 - (out.outW / 2 - t.ox) * k;
     const oy = out.outH / 2 - (out.outH / 2 - t.oy) * k;
     changeTransform(
       i,
-      clampTransform({ scale: nextScale, ox, oy }, p.imgW, p.imgH, out.outW, out.outH)
+      clampTransform(
+        { scale: nextScale, ox, oy },
+        p.imgW,
+        p.imgH,
+        out.outW,
+        out.outH,
+      ),
     );
   };
 
@@ -213,7 +235,11 @@ export default function ToolPage() {
         const p = readyPhotos[i];
         renderScene(ctx, w, h, p.bitmap, p.transform, 1, overlay);
         const blob = await new Promise<Blob>((res, rej) =>
-          canvas.toBlob((b) => (b ? res(b) : rej(new Error("encode failed"))), "image/jpeg", 0.92)
+          canvas.toBlob(
+            (b) => (b ? res(b) : rej(new Error("encode failed"))),
+            "image/jpeg",
+            0.92,
+          ),
         );
         zip.file(`photo-${String(i + 1).padStart(3, "0")}.jpg`, blob);
         await new Promise((r) => setTimeout(r, 0));
@@ -226,7 +252,9 @@ export default function ToolPage() {
       a.download = "framed-photos.zip";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      toast.success(`Exported ${readyPhotos.length} framed ${readyPhotos.length === 1 ? "photo" : "photos"}`);
+      toast.success(
+        `Exported ${readyPhotos.length} framed ${readyPhotos.length === 1 ? "photo" : "photos"}`,
+      );
     } catch (err) {
       console.error(err);
       toast.error("Export failed. Please try again.");
@@ -245,7 +273,9 @@ export default function ToolPage() {
 
   const navPhotos = (delta: number) => {
     if (!photos.length) return;
-    setSelectedIndex((i) => Math.min(photos.length - 1, Math.max(0, i + delta)));
+    setSelectedIndex((i) =>
+      Math.min(photos.length - 1, Math.max(0, i + delta)),
+    );
     setMobileTab(null);
   };
 
@@ -254,7 +284,10 @@ export default function ToolPage() {
       <div className="flex h-dvh flex-col bg-background">
         <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 backdrop-blur sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
-            <Link href="/" className="flex items-center gap-1.5 font-heading text-base font-semibold tracking-tight">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 font-heading text-base font-semibold tracking-tight"
+            >
               <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <HugeiconsIcon icon={FrameIcon} className="size-4" />
               </span>
@@ -308,48 +341,64 @@ export default function ToolPage() {
                   <HugeiconsIcon icon={ChevronLeftIcon} className="size-5" />
                 </button>
                 <div className="flex min-w-0 flex-1 items-center justify-center overflow-y-auto rounded-xl border border-border bg-muted/30">
-                {!overlay ? (
-                  <EmptyState
-                    icon={<HugeiconsIcon icon={FrameIcon} className="size-8" />}
-                    title="Choose a frame to begin"
-                    body="Upload your own transparent PNG to frame your photos."
-                    action="Choose a frame"
-                    onClick={() => setMobileTab("frame")}
-                  />
-                ) : !photo || photo.status === "loading" ? (
-                  <EmptyState
-                    icon={<HugeiconsIcon icon={ImageAdd01Icon} className="size-8" />}
-                    title="Add some photos to frame"
-                    body="Drop photos anywhere in this view or click to select them."
-                    action="Add photos"
-                    onClick={() => photoInputRef.current?.click()}
-                  />
-                ) : photo.status === "error" ? (
-                  <EmptyState
-                    icon={<HugeiconsIcon icon={ImageAdd01Icon} className="size-8" />}
-                    title="This photo failed to load"
-                    body="Try removing it and adding it again."
-                    action="Remove"
-                    onClick={() => removePhoto(photo.id)}
-                  />
-                ) : (
-                  <div className="flex h-full w-full flex-col">
-                    <CropEditor
-                      key={photo.id + ratio.id}
-                      photo={photo}
-                      outW={outW}
-                      outH={outH}
-                      overlay={overlay}
-                      transform={photo.transform}
-                      onChangeTransform={(t) => changeTransform(selectedIndex, t)}
+                  {!overlay ? (
+                    <EmptyState
+                      icon={
+                        <HugeiconsIcon icon={FrameIcon} className="size-8" />
+                      }
+                      title="Choose a frame to begin"
+                      body="Upload your own transparent PNG to frame your photos."
+                      action="Choose a frame"
+                      onClick={() => setMobileTab("frame")}
                     />
-                  </div>
-                )}
+                  ) : !photo || photo.status === "loading" ? (
+                    <EmptyState
+                      icon={
+                        <HugeiconsIcon
+                          icon={ImageAdd01Icon}
+                          className="size-8"
+                        />
+                      }
+                      title="Add some photos to frame"
+                      body="Drop photos anywhere in this view or click to select them."
+                      action="Add photos"
+                      onClick={() => photoInputRef.current?.click()}
+                    />
+                  ) : photo.status === "error" ? (
+                    <EmptyState
+                      icon={
+                        <HugeiconsIcon
+                          icon={ImageAdd01Icon}
+                          className="size-8"
+                        />
+                      }
+                      title="This photo failed to load"
+                      body="Try removing it and adding it again."
+                      action="Remove"
+                      onClick={() => removePhoto(photo.id)}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col">
+                      <CropEditor
+                        key={photo.id + ratio.id}
+                        photo={photo}
+                        outW={outW}
+                        outH={outH}
+                        overlay={overlay}
+                        transform={photo.transform}
+                        onChangeTransform={(t) =>
+                          changeTransform(selectedIndex, t)
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={() => navPhotos(1)}
-                  disabled={!photos.length || selectedIndex === photos.length - 1}
+                  disabled={
+                    !photos.length || selectedIndex === photos.length - 1
+                  }
                   aria-label="Next photo"
                   className="group flex w-10 shrink-0 items-center justify-center self-stretch rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
                 >
@@ -381,7 +430,9 @@ export default function ToolPage() {
                           <Button
                             variant="outline"
                             size="icon-sm"
-                            onClick={() => zoomCenter(selectedIndex, 1 / ZOOM_BUTTONS)}
+                            onClick={() =>
+                              zoomCenter(selectedIndex, 1 / ZOOM_BUTTONS)
+                            }
                             aria-label="Zoom out"
                           />
                         }
@@ -396,7 +447,9 @@ export default function ToolPage() {
                           <Button
                             variant="outline"
                             size="icon-sm"
-                            onClick={() => zoomCenter(selectedIndex, ZOOM_BUTTONS)}
+                            onClick={() =>
+                              zoomCenter(selectedIndex, ZOOM_BUTTONS)
+                            }
                             aria-label="Zoom in"
                           />
                         }
@@ -407,8 +460,8 @@ export default function ToolPage() {
                     </Tooltip>
                   </div>
                   <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
-                    <HugeiconsIcon icon={Move01Icon} className="size-3.5" /> Drag to pan · scroll or pinch
-                    to zoom
+                    <HugeiconsIcon icon={Move01Icon} className="size-3.5" />{" "}
+                    Drag to pan · scroll or pinch to zoom
                   </span>
                 </div>
               )}
@@ -438,11 +491,17 @@ export default function ToolPage() {
                     onClick={() => selectIndex(i)}
                     className={cn(
                       "group relative aspect-square h-16 shrink-0 overflow-hidden rounded-lg border-2",
-                      i === selectedIndex ? "border-primary" : "border-border opacity-70 hover:opacity-100"
+                      i === selectedIndex
+                        ? "border-primary"
+                        : "border-border opacity-70 hover:opacity-100",
                     )}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.objectUrl} alt={p.name} className="size-full object-cover" />
+                    <img
+                      src={p.objectUrl}
+                      alt={p.name}
+                      className="size-full object-cover"
+                    />
                     {p.status === "error" && (
                       <span className="absolute inset-0 flex items-center justify-center bg-destructive/20 text-[10px] font-medium text-destructive">
                         Error
@@ -487,11 +546,12 @@ export default function ToolPage() {
           onDrop={(e) => {
             e.preventDefault();
             setDragOver(false);
-            if (e.dataTransfer.files) addFiles(Array.from(e.dataTransfer.files));
+            if (e.dataTransfer.files)
+              addFiles(Array.from(e.dataTransfer.files));
           }}
           className={cn(
             "pointer-events-none fixed inset-0 z-50 hidden items-center justify-center border-4 border-dashed border-primary bg-primary/5",
-            dragOver && "pointer-events-auto flex"
+            dragOver && "pointer-events-auto flex",
           )}
         >
           <p className="text-lg font-medium">Drop photos to frame them</p>
@@ -508,7 +568,9 @@ export default function ToolPage() {
             active={mobileTab === "photos"}
             icon={<HugeiconsIcon icon={ImageAdd01Icon} className="size-5" />}
             label="Photos"
-            onClick={() => setMobileTab(mobileTab === "photos" ? null : "photos")}
+            onClick={() =>
+              setMobileTab(mobileTab === "photos" ? null : "photos")
+            }
           />
         </nav>
 
@@ -569,7 +631,7 @@ function TabButton({
       aria-pressed={active}
       className={cn(
         "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
-        active ? "text-primary" : "text-muted-foreground"
+        active ? "text-primary" : "text-muted-foreground",
       )}
     >
       {icon}
