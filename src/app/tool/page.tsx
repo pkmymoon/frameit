@@ -111,7 +111,7 @@ export default function ToolPage() {
   const addCustomOverlay = async (file: File) => {
     const url = URL.createObjectURL(file);
     await setOverlayImage(url, file.name);
-    toast.success("Custom frame added");
+    toast.success("Frame added");
   };
 
   const removeOverlay = () => {
@@ -188,78 +188,90 @@ export default function ToolPage() {
     );
   };
 
-  const resetPhoto = (i: number) => {
-    setPhotos((prev) =>
-      prev.map((p, idx) =>
-        idx === i && p.status === "ready"
-          ? { ...p, transform: coverTransform(p.imgW, p.imgH, outW, outH) }
-          : p,
-      ),
-    );
-  };
+  const resetPhoto = React.useCallback(
+    (i: number) => {
+      setPhotos((prev) =>
+        prev.map((p, idx) =>
+          idx === i && p.status === "ready"
+            ? { ...p, transform: coverTransform(p.imgW, p.imgH, outW, outH) }
+            : p,
+        ),
+      );
+    },
+    [outW, outH],
+  );
 
-  const zoomCenter = (i: number, factor: number) => {
-    const p = photos[i];
-    if (!p || p.status !== "ready") return;
-    const out = outputDims(ratio, resolution);
-    const minScale = coverTransform(p.imgW, p.imgH, out.outW, out.outH).scale;
-    const t = p.transform;
-    const nextScale = Math.min(
-      Math.max(t.scale * factor, minScale),
-      minScale * MAX_ZOOM,
-    );
-    const k = nextScale / t.scale;
-    const ox = out.outW / 2 - (out.outW / 2 - t.ox) * k;
-    const oy = out.outH / 2 - (out.outH / 2 - t.oy) * k;
-    changeTransform(
-      i,
-      clampTransform(
-        { scale: nextScale, ox, oy },
-        p.imgW,
-        p.imgH,
-        out.outW,
-        out.outH,
-      ),
-    );
-  };
+  const zoomCenter = React.useCallback(
+    (i: number, factor: number) => {
+      const p = photos[i];
+      if (!p || p.status !== "ready") return;
+      const out = outputDims(ratio, resolution);
+      const minScale = coverTransform(p.imgW, p.imgH, out.outW, out.outH).scale;
+      const t = p.transform;
+      const nextScale = Math.min(
+        Math.max(t.scale * factor, minScale),
+        minScale * MAX_ZOOM,
+      );
+      const k = nextScale / t.scale;
+      const ox = out.outW / 2 - (out.outW / 2 - t.ox) * k;
+      const oy = out.outH / 2 - (out.outH / 2 - t.oy) * k;
+      changeTransform(
+        i,
+        clampTransform(
+          { scale: nextScale, ox, oy },
+          p.imgW,
+          p.imgH,
+          out.outW,
+          out.outH,
+        ),
+      );
+    },
+    [photos, ratio, resolution],
+  );
 
-  const renderPhotoBlob = async (p: PhotoState) => {
-    const { outW: w, outH: h } = outputDims(ratio, resolution);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
-    renderScene(ctx, w, h, p.bitmap, p.transform, 1, overlay);
-    return new Promise<Blob>((res, rej) =>
-      canvas.toBlob(
-        (b) => (b ? res(b) : rej(new Error("encode failed"))),
-        "image/jpeg",
-        0.92,
-      ),
-    );
-  };
+  const renderPhotoBlob = React.useCallback(
+    async (p: PhotoState) => {
+      const { outW: w, outH: h } = outputDims(ratio, resolution);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d")!;
+      renderScene(ctx, w, h, p.bitmap, p.transform, 1, overlay);
+      return new Promise<Blob>((res, rej) =>
+        canvas.toBlob(
+          (b) => (b ? res(b) : rej(new Error("encode failed"))),
+          "image/jpeg",
+          0.92,
+        ),
+      );
+    },
+    [ratio, resolution, overlay],
+  );
 
-  const downloadPhoto = async (idx: number) => {
-    const p = photos[idx];
-    if (!p || p.status !== "ready") return;
-    setExporting(true);
-    try {
-      const blob = await renderPhotoBlob(p);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const base = (p.name || "photo").replace(/\.[^.]+$/, "");
-      a.href = url;
-      a.download = `${base}-framed.jpg`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-      toast.success(`Downloaded “${base}-framed.jpg”`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Download failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
-  };
+  const downloadPhoto = React.useCallback(
+    async (idx: number) => {
+      const p = photos[idx];
+      if (!p || p.status !== "ready") return;
+      setExporting(true);
+      try {
+        const blob = await renderPhotoBlob(p);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const base = (p.name || "photo").replace(/\.[^.]+$/, "");
+        a.href = url;
+        a.download = `${base}-framed.jpg`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        toast.success(`Downloaded “${base}-framed.jpg”`);
+      } catch (err) {
+        console.error(err);
+        toast.error("Download failed. Please try again.");
+      } finally {
+        setExporting(false);
+      }
+    },
+    [photos, renderPhotoBlob],
+  );
 
   const exportZip = async () => {
     const readyPhotos = photos.filter((p) => p.status === "ready");
@@ -305,13 +317,59 @@ export default function ToolPage() {
     setMobileTab(null);
   };
 
-  const navPhotos = (delta: number) => {
-    if (!photos.length) return;
-    setSelectedIndex((i) =>
-      Math.min(photos.length - 1, Math.max(0, i + delta)),
-    );
-    setMobileTab(null);
-  };
+  const navPhotos = React.useCallback(
+    (delta: number) => {
+      if (!photos.length) return;
+      setSelectedIndex((i) =>
+        Math.min(photos.length - 1, Math.max(0, i + delta)),
+      );
+      setMobileTab(null);
+    },
+    [photos.length],
+  );
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        navPhotos(-1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        navPhotos(1);
+      } else if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        zoomCenter(selectedIndex, ZOOM_BUTTONS);
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        zoomCenter(selectedIndex, 1 / ZOOM_BUTTONS);
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        resetPhoto(selectedIndex);
+      } else if (e.key === "d" || e.key === "D") {
+        e.preventDefault();
+        void downloadPhoto(selectedIndex);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [
+    photos.length,
+    navPhotos,
+    selectedIndex,
+    zoomCenter,
+    resetPhoto,
+    downloadPhoto,
+  ]);
 
   return (
     <TooltipProvider>
@@ -517,9 +575,29 @@ export default function ToolPage() {
                       <TooltipContent>Download this photo</TooltipContent>
                     </Tooltip>
                   </div>
-                  <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
-                    <HugeiconsIcon icon={Move01Icon} className="size-3.5" />{" "}
-                    Drag to pan · scroll or pinch to zoom
+                  <span className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:inline-flex">
+                    <span className="inline-flex items-center gap-1.5">
+                      <HugeiconsIcon icon={Move01Icon} className="size-3.5" />
+                      Drag to pan · scroll or pinch to zoom
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Kbd>←</Kbd>
+                      <Kbd>→</Kbd>
+                      navigate
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Kbd>+</Kbd>
+                      <Kbd>−</Kbd>
+                      zoom
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Kbd>R</Kbd>
+                      reset
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Kbd>D</Kbd>
+                      download
+                    </span>
                   </span>
                 </div>
               )}
@@ -714,6 +792,14 @@ function TabButton({
       {icon}
       {label}
     </button>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-mono text-[10px] font-medium text-foreground/80">
+      {children}
+    </kbd>
   );
 }
 
