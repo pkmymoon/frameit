@@ -4,11 +4,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import {
-  Delete02Icon,
-  ImageAdd02Icon,
-  LayoutGridIcon,
-} from "@hugeicons/core-free-icons";
+import { Delete02Icon, ImageAdd02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { RATIOS, RESOLUTIONS, outputDims, type Ratio } from "@/lib/types";
@@ -50,10 +46,7 @@ export function FramesPanel({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-          <HugeiconsIcon icon={LayoutGridIcon} className="size-4" />
-          Frame
-        </p>
+        <p className="mb-2 text-sm font-medium text-muted-foreground">Frame</p>
         <Button
           variant="outline"
           size="sm"
