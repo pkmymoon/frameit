@@ -52,7 +52,7 @@ export function Hero() {
       </h1>
 
       <p className="max-w-2xl text-base text-muted-foreground text-pretty sm:text-lg">
-        Upload your own transparent frame PNG, drop in your photos, and FrameIt
+        Upload your own transparent frame PNG, drop in your photos, and Frame-it
         frames them instantly. No sign-up, no uploads — just your device.
       </p>
 

@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FrameIt",
+  title: "Frame-it",
   description:
     "Seamlessly frame your photos — fully private, with smart cropping that runs entirely in your browser.",
 };

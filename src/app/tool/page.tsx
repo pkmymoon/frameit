@@ -383,13 +383,13 @@ export default function ToolPage() {
               <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <HugeiconsIcon icon={FrameIcon} className="size-4" />
               </span>
-              <span className="hidden sm:inline">FrameIt</span>
+              <span className="">Frame-it</span>
             </Link>
-            <span className="mx-2 hidden h-5 w-px bg-border sm:block" />
+            <span className="mx-2 h-5 w-px bg-border" />
             <span className="text-xs text-muted-foreground sm:text-sm">
               {photos.length
                 ? `${photos.length} photo${photos.length === 1 ? "" : "s"}`
-                : "Untitled"}
+                : null}
             </span>
           </div>
           <Button
@@ -399,10 +399,9 @@ export default function ToolPage() {
             size="sm"
           >
             <HugeiconsIcon icon={Zip01Icon} data-icon="inline-start" />
-            <span className="hidden sm:inline">
+            <span className="">
               {exporting ? "Download…" : "Download as ZIP"}
             </span>
-            <span className="sm:hidden">{exporting ? "…" : readyCount}</span>
           </Button>
         </header>
 
@@ -722,7 +721,7 @@ export default function ToolPage() {
                 Pick a frame, ratio, and resolution.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="scrollbar-none flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+            <div className="scrollbar-none flex-1 overflow-y-auto overscroll-contain px-4 py-4">
               <FramesPanel
                 overlay={overlay}
                 overlayName={overlayName}

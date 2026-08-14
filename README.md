@@ -1,4 +1,4 @@
-# FrameIt
+# Frame-it
 
 Frame your photos seamlessly with your own custom frame. Everything runs **100% in the browser** — fully secure, your photos never leave your device, and there is no backend or server.
 

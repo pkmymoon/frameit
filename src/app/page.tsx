@@ -17,7 +17,7 @@ export default function Page() {
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <HugeiconsIcon icon={FrameIcon} className="size-5" />
             </span>
-            FrameIt
+            Frame-it
           </Link>
           <Button size="sm" nativeButton={false} render={<Link href="/tool" />}>
             Start framing
